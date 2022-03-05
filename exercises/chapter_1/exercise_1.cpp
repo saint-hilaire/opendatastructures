@@ -24,6 +24,12 @@ void dumpStack(stack<string> &theStack){
 		theStack.pop();
 	}
 }
+void dumpIntStack(stack<int> &theStack){
+	while(! theStack.empty() ){
+		cout << theStack.top() << '\n';
+		theStack.pop();
+	}
+}
 /*
  * Helper function used in onePoint8.
  * Takes a reference to a queue, and outputs each element
@@ -281,6 +287,204 @@ void onePoint9() {
 	}
 }
 
+/*
+ * A matched string is a sequence of {, }, (, ), [, and ] characters that are properly matched. 
+ * For example, ``{{()[]}}'' is a matched string, but this ``{{()]}'' is not, 
+ * since the second { is matched with a ]. Show how to use a stack so that, 
+ * given a string of length $ \mathtt{n}$, you can determine if it is a matched 
+ * string in O(n) time.
+ * */
+bool closing_closes_opening(char &opening, char &closing) {
+	switch(opening) {
+		case '{':
+			return closing == '}';
+		case '(':
+			return closing == ')';
+		case '[':
+			return closing == ']';
+		case '<':
+			return closing == '>';
+		default:
+			return false;
+	}
+	
+}
+bool three_matched_string(char *str) {
+	// Could have used a mapping, but we want to implement this only
+	// with a stack, so we use this and the above helper function.
+	stack<char> myStack;
+	bool ok = false;
+	for(char c = *str; c; c = *++str) {
+		switch(c) {
+			case '{':
+			case '(':
+			case '[':
+			case '<':
+				ok = true;
+				myStack.push(c);
+				break;
+			default:
+				if(myStack.size() > 0 && closing_closes_opening(myStack.top(), c)){
+					myStack.pop();
+				}
+				break;
+		}
+	}
+	return ok && myStack.size() == 0;
+}
+
+/*
+ * Suppose you have a Stack, that supports only the push(x) and pop() operations. 
+ * Show how, using only a FIFO Queue, q, you can reverse the order of all elements in s.
+ * */
+stack<int> four_reverse_stack_with_queue(stack<int> theStack) {
+	queue<int> theQueue;
+	int elem;
+	while(! theStack.empty()) {
+		elem = theStack.top();
+		theQueue.push(elem);
+		theStack.pop();
+	}
+
+	while(! theQueue.empty()) {
+		elem = theQueue.front();
+		theStack.push(elem);
+		theQueue.pop();
+	}
+	return theStack;
+}
+
+/*
+ * Using a USet, implement a Bag. A Bag is like a USet -- it supports the add(x), remove(x) and find(x) methods--but 
+ * it allows duplicate elements to be stored. The find(x) operation in a Bag returns some element (if any) that is equal 
+ * to x. In addition, a Bag supports the findAll(x) operation that returns a list of all elements in the Bag that 
+ * are equal to x.
+ * */
+
+typedef tuple<string, int> collection;
+typedef set<collection> bag;
+typedef bag::iterator bag_iterator;
+class Bag {
+	private:
+		bag _bag;
+	public:
+		bag getBag() {
+			return _bag;
+		}
+		void add(string value) {
+			bag_iterator itr = find(value);
+			if(itr == _bag.end()) {
+				collection new_coll(value, 1);
+				_bag.insert(new_coll);
+			} else {
+				collection coll = *itr;
+				get<1>(coll) ++;
+				_bag.insert(coll);
+				_bag.erase(itr);
+			}
+		}
+		void remove(string value) {
+			bag_iterator itr = find(value);
+			if(itr != _bag.end()) {
+				collection coll = *itr;
+				if(get<1>(coll) > 1) {
+					get<1>(coll) --;
+					_bag.insert(coll);
+				}
+				_bag.erase(itr);
+			}
+		}
+		void dumpAll() {
+			bag_iterator itr;
+			for(itr = _bag.begin(); itr != _bag.end(); ++itr) {
+				cout << get<0>(*itr) << ": " << get<1>(*itr) << "\n";
+			}
+		}
+		bool hasElem(string value) {
+
+			bool has = false;
+			for (bag_iterator itr = _bag.begin(); itr != _bag.end(); ++itr) {
+				if(get<0>(*itr).compare(value) == 0) {
+					has = true;
+				}
+			}
+			return has;
+		}
+		bag_iterator find(string value) {
+			bag_iterator itr;
+			for(itr = _bag.begin(); itr != _bag.end(); ++itr) {
+				collection coll = *itr;
+				if(get<0>(coll).compare(value) == 0) {
+					return itr;
+				}
+			}
+			return _bag.end();
+		}
+		collection findAll(string value) {
+			bag_iterator itr = find(value);
+			if(itr == _bag.end()) {
+				collection coll("", 0);
+				return coll;
+			} else {
+				return *itr;
+			}
+		}
+};
+
+void doFive() {
+	Bag myBag;
+	char userIn;
+	string element;
+	bool goOn = true;
+	collection coll;
+	bag_iterator itr;
+	while(goOn) {
+		cout << "This is your bag:\n";
+		myBag.dumpAll();
+		cout << "Choose an action:\n";
+		cout << "a: Add an element\n";
+		cout << "r: Remove an element\n";
+		cout << "f: Find an element\n";
+		cout << "F: Find all elements\n";
+		cout << "x: Quit\n";
+		cin >> userIn;
+		switch(userIn) {
+			case 'a':
+				cout << "Enter a value: ";
+				cin >> element;
+				myBag.add(element);
+				break;
+			case 'r':
+				cout << "Enter a value: ";
+				cin >> element;
+				myBag.remove(element);
+				break;
+			case 'f':
+				cout << "Enter a value: ";
+				cin >> element;
+				if(myBag.hasElem(element)) {
+					cout << "Found it!\n";
+				} else {
+					cout << "Didn't find it!\n";
+				}
+				break;
+			case 'F':
+				cout << "Enter a value: ";
+				cin >> element;
+				coll = myBag.findAll(element);
+				cout << get<0>(coll) << ": " << get<1>(coll) << '\n';
+				break;
+			case 'x':
+				goOn = false;
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+
+	
 void makeFile(){
 	ofstream outputFile(fileName);
 	for (int i = 0; i < 1000000; ++i) {
@@ -288,6 +492,7 @@ void makeFile(){
 	}
 	outputFile.close();
 }
+
 int main(int argc, char ** argv){
 	string myArg = argv[1];
 	if(myArg == "1"){
@@ -308,6 +513,27 @@ int main(int argc, char ** argv){
 		onePoint8();
 	}else if(myArg == "9"){
 		onePoint9();
+	}else if(myArg == "three"){
+		if(three_matched_string(argv[2])) {
+			cout << "That's a matched string." << '\n';
+		}else {
+			cout << "That's not a matched string." << '\n';
+		}
+	}else if(myArg == "four"){
+		stack<int> theStack;
+		// TODO: Implement support for comma-separated values passed as CLI args.
+		for(int i = 0; i < 10; ++i) {
+			theStack.push(i);
+		}
+		stack<int> reversedStack = four_reverse_stack_with_queue(theStack);
+		cout << "The stack: \n";
+		// TODO: Improve dumpStack() so it doesn't require strings, so we don't
+		//       have to use this special dumpIntStack();
+		dumpIntStack(theStack);
+		cout << "The reversed stack: \n";
+		dumpIntStack(reversedStack);
+	}else if(myArg == "five"){
+		doFive();
 	}else if(myArg == "make_file"){
 		makeFile();
 	}
