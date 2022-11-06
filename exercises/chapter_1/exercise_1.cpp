@@ -336,9 +336,10 @@ bool three_matched_string(char *str)
 				myStack.push(c);
 				break;
 			default:
-				if(myStack.size() > 0 && closing_closes_opening(myStack.top(), c)) {
+				if(myStack.size() > 0 && closing_closes_opening(myStack.top(), c))
 					myStack.pop();
-				}
+				else
+					myStack.push(c);
 				break;
 		}
 	}
